@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#1e293b" />
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563eb" />
+      <stop offset="100%" stop-color="#38bdf8" />
+    </linearGradient>
+    <filter id="dropGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="16" flood-color="#2563eb" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <!-- Sfondo Icona Arrotondato (compatibile Maskable PWA) -->
+  <rect width="512" height="512" rx="110" fill="url(#bgGrad)" />
+
+  <!-- Cerchio decorativo orbitale -->
+  <circle cx="256" cy="256" r="170" fill="none" stroke="#334155" stroke-width="4" stroke-dasharray="12 12" opacity="0.6" />
+
+  <!-- Badge centrale esagonale/forma bus stilizzato -->
+  <g filter="url(#dropGlow)">
+    <!-- Sagoma Navetta / Bus Moderno TranspoSync -->
+    <rect x="146" y="136" width="220" height="230" rx="36" fill="url(#accentGrad)" />
+
+    <!-- Parabrezza -->
+    <rect x="171" y="166" width="170" height="74" rx="14" fill="#ffffff" opacity="0.95" />
+
+    <!-- Fari anteriori -->
+    <circle cx="186" cy="286" r="16" fill="#fef08a" />
+    <circle cx="326" cy="286" r="16" fill="#fef08a" />
+
+    <!-- Griglia / Indicatore sincronizzazione -->
+    <rect x="221" y="278" width="70" height="16" rx="8" fill="#1e293b" opacity="0.3" />
+
+    <!-- Ruote / Indicatori di binario inferiori -->
+    <rect x="166" y="356" width="40" height="24" rx="8" fill="#0f172a" />
+    <rect x="306" y="356" width="40" height="24" rx="8" fill="#0f172a" />
+
+    <!-- Simbolo Sync / Frecce dinamiche sopra il parabrezza -->
+    <path d="M 230 200 L 256 182 L 282 200" fill="none" stroke="#0284c7" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    <circle cx="256" cy="208" r="4" fill="#0284c7" />
+  </g>
+
+  <!-- Indicatore di stato operativo (Punto verde attivo) -->
+  <circle cx="366" cy="146" r="18" fill="#22c55e" stroke="#0f172a" stroke-width="5" />
+</svg>
