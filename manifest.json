@@ -2,7 +2,7 @@
   "name": "TranspoSync Gestione & Prenotazione Trasporti",
   "short_name": "TranspoSync",
   "description": "PWA per la gestione calendariale, prenotazione corse e monitoraggio slot di trasporto aziendale.",
-  "start_url": "./Index.html",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
