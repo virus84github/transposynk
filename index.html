@@ -1,637 +1,460 @@
 <!DOCTYPE html>
-
-<html lang="it"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>TranspoSync - Gestione &amp; Prenotazione Trasporti</title>
-<!-- PWA Meta Tags -->
-<link href="./manifest.json" rel="manifest"/>
-<meta content="#0f172a" name="theme-color"/>
-<meta content="yes" name="apple-mobile-web-app-capable"/>
-<meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
-<meta content="TranspoSync" name="apple-mobile-web-app-title"/>
-<link href="./icon-512.png" rel="apple-touch-icon"/>
-<!-- Tailwind CSS & FontAwesome Icons -->
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com" rel="preconnect"/>
-<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
-<script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Plus Jakarta Sans', 'sans-serif'],
-          },
-          colors: {
-            brand: {
-              50: '#eff6ff',
-              100: '#dbeafe',
-              500: '#3b82f6',
-              600: '#2563eb',
-              700: '#1d4ed8',
-              900: '#0f172a',
-            }
-          }
-        }
-      }
-    }
-  </script>
-<style>
-    body {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .badge-combo-A { background-color: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
-    .badge-combo-B { background-color: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
-    .badge-combo-C { background-color: #dcfce7; color: #166534; border: 1px solid #86efac; }
-    .badge-combo-D { background-color: #f3e8ff; color: #6b21a8; border: 1px solid #d8b4fe; }
-    .badge-combo-default { background-color: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; }
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TranspoSync - Gestione & Prenotazione Trasporti</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0f172a">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .badge-combo-1 { background-color: #3b82f6; color: white; }
+    .badge-combo-2 { background-color: #10b981; color: white; }
+    .badge-combo-3 { background-color: #f59e0b; color: white; }
+    .badge-combo-4 { background-color: #8b5cf6; color: white; }
+    .badge-combo-5 { background-color: #ec4899; color: white; }
+    .badge-combo-6 { background-color: #06b6d4; color: white; }
   </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col">
-<!-- Header / Navigation Bar Globale -->
-<header class="bg-slate-800/90 backdrop-blur border-b border-slate-700 sticky top-0 z-40">
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-<div class="flex items-center space-x-3">
-<div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
-<i class="fa-solid fa-van-shuttle text-lg"></i>
-</div>
-<div>
-<span class="font-extrabold text-lg tracking-tight text-white flex items-center gap-2">
-            TranspoSync <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-900/60 text-blue-300 border border-blue-700/50">PWA</span>
-</span>
-<p class="text-xs text-slate-400 hidden sm:block">Gestione operativa &amp; prenotazione corse</p>
-</div>
-</div>
-<!-- Schede di Navigazione Principali -->
-<nav class="flex items-center space-x-1 sm:space-x-2 bg-slate-900/70 p-1.5 rounded-xl border border-slate-700/70 text-sm">
-<button class="nav-tab active px-3 py-1.5 rounded-lg font-medium transition flex items-center gap-2 bg-blue-600 text-white shadow" id="btn-prenotazione" onclick="switchTab('tab-prenotazione')">
-<i class="fa-solid fa-calendar-check"></i>
-<span class="hidden md:inline">2. Prenotazione</span>
-</button>
-<button class="nav-tab px-3 py-1.5 rounded-lg font-medium transition flex items-center gap-2 text-slate-300 hover:text-white hover:bg-slate-800" id="btn-tabella" onclick="switchTab('tab-tabella')">
-<i class="fa-solid fa-table-list"></i>
-<span class="hidden md:inline">3. Tabella &amp; Scelte</span>
-</button>
-<button class="nav-tab px-3 py-1.5 rounded-lg font-medium transition flex items-center gap-2 text-slate-300 hover:text-white hover:bg-slate-800" id="btn-admin" onclick="requestAdminAccess()">
-<i class="fa-solid fa-lock text-xs text-amber-400"></i>
-<span class="hidden md:inline">1. Amministrazione</span>
-</button>
-</nav>
-</div>
-</header>
-<!-- CONTENUTO PRINCIPALE -->
-<main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
-<!-- SEZIONE 2: PRENOTAZIONE CORSA UTENTE -->
-<section class="tab-content block" id="tab-prenotazione">
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-<!-- Form Prenotazione -->
-<div class="lg:col-span-2 bg-slate-800 rounded-2xl p-6 border border-slate-700 shadow-xl">
-<div class="flex items-center justify-between pb-5 border-b border-slate-700 mb-6">
-<div>
-<h2 class="text-xl font-bold text-white flex items-center gap-2">
-<i class="fa-solid fa-ticket text-blue-500"></i> Prenota la tua Corsa
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-blue-600 selection:text-white">
+
+  <!-- TOPBAR -->
+  <header class="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white text-xl shadow-lg shadow-blue-500/20">
+          <i class="fa-solid fa-bus"></i>
+        </div>
+        <div>
+          <h1 class="font-extrabold text-lg tracking-tight flex items-center gap-2">
+            TranspoSync <span class="text-xs font-semibold px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">PWA Cloud</span>
+          </h1>
+          <p class="text-xs text-slate-400">Sincronizzazione Real-Time tra tutti i dispositivi</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div id="cloud-status" class="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>Firestore Connesso</span>
+        </div>
+
+        <nav class="flex bg-slate-950 p-1 rounded-xl border border-slate-800">
+          <button onclick="switchTab('prenotazione')" id="nav-prenotazione" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg bg-blue-600 text-white transition flex items-center gap-2">
+            <i class="fa-regular fa-calendar-check"></i> <span>2. Prenotazione</span>
+          </button>
+          <button onclick="switchTab('tabella')" id="nav-tabella" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-400 hover:text-white transition flex items-center gap-2">
+            <i class="fa-solid fa-table-list"></i> <span>3. Tabella Scelte</span>
+          </button>
+          <button onclick="switchTab('admin')" id="nav-admin" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-400 hover:text-white transition flex items-center gap-2">
+            <i class="fa-solid fa-lock text-xs"></i> <span>1. Admin</span>
+          </button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENUTO PRINCIPALE -->
+  <main class="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6">
+
+    <!-- SEZIONE 2: PRENOTAZIONE -->
+    <section id="section-prenotazione" class="space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+          <div class="border-b border-slate-800/80 pb-4 mb-6 flex justify-between items-center">
+            <div>
+              <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-ticket text-blue-500"></i> Prenota la tua Corsa
               </h2>
-<p class="text-sm text-slate-400 mt-1">Seleziona nominativo, data, fascia oraria e opzioni di corsa.</p>
-</div>
-<span class="text-xs font-mono bg-blue-950 text-blue-400 px-3 py-1 rounded-full border border-blue-800">Slot Attivi</span>
-</div>
-<form class="space-y-5" id="form-booking" onsubmit="handleBooking(event)">
-<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-<!-- Nominativo Dropdown -->
-<div>
-<label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Nominativo Dipendente *</label>
-<div class="relative">
-<select class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white appearance-none focus:outline-none focus:border-blue-500 transition" id="book-user" required="">
-<option disabled="" selected="" value="">Seleziona il tuo nome...</option>
-</select>
-<i class="fa-solid fa-chevron-down absolute right-4 top-4 text-xs text-slate-400 pointer-events-none"></i>
-</div>
-</div>
-<!-- Data Prenotazione -->
-<div>
-<label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Data Servizio *</label>
-<input class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition" id="book-date" required="" type="date"/>
-</div>
-</div>
-<!-- Selezione Tipologia Trasporto -->
-<div>
-<label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Tipologia di Trasporto *</label>
-<div class="grid grid-cols-1 sm:grid-cols-3 gap-3" id="booking-types-container">
-<!-- Generato dinamicamente via JS -->
-</div>
-</div>
-<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-<!-- Fascia Oraria Dinamica -->
-<div>
-<label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Fascia Oraria Prestabilita *</label>
-<div class="relative">
-<select class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white appearance-none focus:outline-none focus:border-blue-500 transition" id="book-slot" required="">
-<option disabled="" selected="" value="">Seleziona fascia oraria...</option>
-<!-- Generato dinamicamente via JS -->
-</select>
-<i class="fa-solid fa-chevron-down absolute right-4 top-4 text-xs text-slate-400 pointer-events-none"></i>
-</div>
-</div>
-<!-- Opzione Corsa -->
-<div>
-<label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Opzione Corsa *</label>
-<div class="relative">
-<select class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white appearance-none focus:outline-none focus:border-blue-500 transition" id="book-option" required="">
-<option disabled="" selected="" value="">Seleziona opzione...</option>
-<option value="Andata Sola">Andata Sola</option>
-<option value="Ritorno Solo">Ritorno Solo</option>
-<option value="Andata e Ritorno">Andata e Ritorno</option>
-</select>
-<i class="fa-solid fa-chevron-down absolute right-4 top-4 text-xs text-slate-400 pointer-events-none"></i>
-</div>
-</div>
-</div>
-<!-- Note / Fermata Specifica -->
-<div>
-<label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Note o Punto di Salita Opzionale</label>
-<input class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition" id="book-notes" placeholder="Es. Ingresso Nord, Cancello B, fermata metro..." type="text"/>
-</div>
-<button class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3.5 px-6 rounded-xl transition shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2" type="submit">
-<i class="fa-solid fa-circle-check"></i> Conferma Prenotazione Corsa
+              <p class="text-sm text-slate-400 mt-1">Seleziona nominativo, data, fascia oraria e opzioni di corsa.</p>
+            </div>
+          </div>
+
+          <form id="booking-form" onsubmit="handleBooking(event)" class="space-y-5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Nominativo Dipendente *</label>
+                <select id="user-select" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-slate-200 focus:outline-none focus:border-blue-500">
+                  <option value="">Seleziona nominativo...</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Data Servizio *</label>
+                <input type="date" id="date-select" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-slate-200 focus:outline-none focus:border-blue-500">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Tipologia di Trasporto *</label>
+              <div id="transport-types-container" class="grid grid-cols-1 sm:grid-cols-3 gap-3"></div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Fascia Oraria Prestabilita *</label>
+                <select id="time-select" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-slate-200 focus:outline-none focus:border-blue-500">
+                  <option value="">Seleziona fascia oraria...</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Opzione Corsa *</label>
+                <select id="option-select" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-slate-200 focus:outline-none focus:border-blue-500">
+                  <option value="Andata Sola">Andata Sola</option>
+                  <option value="Ritorno Solo">Ritorno Solo</option>
+                  <option value="Andata e Ritorno" selected>Andata e Ritorno</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Note o Fermata Specifica (Opzionale)</label>
+              <input type="text" id="notes-input" placeholder="Es. Fermata Metro Nord, Cancello B..." class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-slate-200 focus:outline-none focus:border-blue-500">
+            </div>
+
+            <button type="submit" class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2">
+              <i class="fa-solid fa-check"></i> Conferma Prenotazione Corsa
             </button>
-</form>
-</div>
-<!-- Riepilogo & Stato PWA -->
-<div class="space-y-6">
-<div class="bg-slate-800 rounded-2xl p-6 border border-slate-700 shadow-xl">
-<h3 class="font-bold text-white text-base flex items-center gap-2 mb-4">
-<i class="fa-solid fa-circle-info text-blue-400"></i> Stato PWA &amp; Modalità Offline
+          </form>
+        </div>
+
+        <div class="space-y-6">
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+            <h3 class="font-bold text-white mb-3 flex items-center gap-2">
+              <i class="fa-solid fa-circle-info text-blue-400"></i> Sincronizzazione Attiva
             </h3>
-<p class="text-xs text-slate-300 leading-relaxed mb-4">
-              TranspoSync è compatibile con GitHub Pages. Le prenotazioni inserite vengono memorizzate direttamente in locale (<code class="text-blue-300 font-mono">localStorage</code>) e persistono alla chiusura dell'app.
+            <p class="text-xs text-slate-400 leading-relaxed">
+              Ogni modifica o prenotazione eseguita da qualunque dispositivo viene memorizzata nel database centrale di Firestore e compare istantaneamente sullo smartphone di tutto il personale.
             </p>
-<div class="p-3 bg-slate-900/80 rounded-xl border border-slate-700 text-xs text-slate-400 space-y-2">
-<div class="flex justify-between items-center">
-<span>Database Locale:</span>
-<span class="text-emerald-400 font-semibold flex items-center gap-1"><i class="fa-solid fa-circle text-[8px]"></i> Attivo</span>
-</div>
-<div class="flex justify-between items-center">
-<span>Password Admin:</span>
-<span class="font-mono text-slate-300">strongroom</span>
-</div>
-</div>
-</div>
-<!-- Quick Preview Ultime Prenotazioni -->
-<div class="bg-slate-800 rounded-2xl p-6 border border-slate-700 shadow-xl">
-<h3 class="font-bold text-white text-sm uppercase tracking-wider text-slate-400 mb-3">Ultime Scelte Registrate</h3>
-<div class="space-y-2 text-xs" id="booking-recent-list">
-<!-- Generato via JS -->
-</div>
-</div>
-</div>
-</div>
-</section>
-<!-- SEZIONE 3: TABELLA SCELTE & CONTATORE CROMATICO -->
-<section class="tab-content hidden" id="tab-tabella">
-<div class="space-y-6">
-<!-- Top bar filtri e statistiche -->
-<div class="bg-slate-800 rounded-2xl p-6 border border-slate-700 shadow-xl">
-<div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-<div>
-<h2 class="text-xl font-bold text-white flex items-center gap-2">
-<i class="fa-solid fa-chart-pie text-emerald-400"></i> Monitoraggio &amp; Contatore Combinazioni
-              </h2>
-<p class="text-sm text-slate-400 mt-1">Gli utenti con la stessa combinazione di (Orario + Tipologia + Opzione) sono raggruppati con lo stesso colore e contati.</p>
-</div>
-<!-- Filtro Data -->
-<div class="flex items-center gap-3">
-<label class="text-xs text-slate-400 font-semibold">Filtra per Data:</label>
-<input class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" id="filter-date" onchange="renderTable()" type="date"/>
-<button class="text-xs text-slate-400 hover:text-white px-2 py-1 bg-slate-700 rounded-lg" onclick="resetDateFilter()">Tutte</button>
-</div>
-</div>
-<!-- Badge Contatori Combinazioni -->
-<div class="mt-6 pt-5 border-t border-slate-700">
-<h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Combinazioni &amp; Contatori Attivi:</h4>
-<div class="flex flex-wrap gap-2.5" id="combination-counters">
-<!-- Badge dinamici con contatore numerico e colore coordinato -->
-</div>
-</div>
-</div>
-<!-- Tabella Risultati -->
-<div class="bg-slate-800 rounded-2xl border border-slate-700 shadow-xl overflow-hidden">
-<div class="overflow-x-auto">
-<table class="w-full text-left text-sm">
-<thead class="bg-slate-900/80 text-xs uppercase font-semibold text-slate-400 border-b border-slate-700">
-<tr>
-<th class="px-6 py-4">Data</th>
-<th class="px-6 py-4">Nominativo</th>
-<th class="px-6 py-4">Tipologia Corsa</th>
-<th class="px-6 py-4">Fascia Oraria</th>
-<th class="px-6 py-4">Opzione</th>
-<th class="px-6 py-4">Codice Combinazione</th>
-<th class="px-6 py-4 text-center">Persone con Stessa Scelta</th>
-<th class="px-6 py-4 text-right">Azioni</th>
-</tr>
-</thead>
-<tbody class="divide-y divide-slate-700/60" id="table-bookings-body">
-<!-- Righe generate dinamicamente -->
-</tbody>
-</table>
-</div>
-<div class="hidden p-8 text-center text-slate-400 text-sm" id="table-empty-msg">
-            Nessuna prenotazione trovata per i filtri selezionati.
           </div>
-</div>
-</div>
-</section>
-<!-- SEZIONE 1: AMMINISTRAZIONE & CONFIGURAZIONE -->
-<section class="tab-content hidden" id="tab-admin">
-<div class="space-y-6">
-<div class="flex items-center justify-between bg-slate-800 p-6 rounded-2xl border border-slate-700">
-<div>
-<h2 class="text-xl font-bold text-white flex items-center gap-2">
-<i class="fa-solid fa-sliders text-amber-400"></i> Pannello di Amministrazione Protetta
+
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-bold text-white flex items-center gap-2 text-sm uppercase tracking-wider">
+                <i class="fa-solid fa-clock-rotate-left text-indigo-400"></i> Ultime Scelte
+              </h3>
+              <span class="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full font-mono">Live</span>
+            </div>
+            <div id="recent-bookings" class="space-y-2.5 text-sm">
+              <div class="text-center py-6 text-slate-500 text-xs">Nessuna prenotazione recente</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SEZIONE 3: TABELLA SCELTE & CONTATORE CROMATICO -->
+    <section id="section-tabella" class="space-y-6 hidden">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
+        <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
+          <div>
+            <h2 class="text-xl font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-chart-pie text-emerald-400"></i> Monitoraggio & Riepilogo Scelte
             </h2>
-<p class="text-sm text-slate-400 mt-1">Configura nuove tipologie di corsa, fasce orarie, gestisci i nominativi del personale e resetta i dati.</p>
-</div>
-<button class="bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/40 text-xs font-semibold px-4 py-2 rounded-xl transition flex items-center gap-2" onclick="lockAdmin()">
-<i class="fa-solid fa-lock"></i> Blocca Pannello
-          </button>
-</div>
-<!-- Griglia Amministrazione a 3 Colonne -->
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-<!-- 1. Gestione Tipologie Corsa -->
-<div class="bg-slate-800 rounded-2xl p-6 border border-slate-700 shadow-xl">
-<h3 class="text-base font-bold text-white mb-4 flex items-center gap-2">
-<i class="fa-solid fa-bus text-blue-400"></i> Gestione Tipologie di Trasporto
-            </h3>
-<form class="flex gap-2 mb-5" onsubmit="handleAddTransportType(event)">
-<input class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500" id="new-type-name" placeholder="Es. Navetta Notturna..." required="" type="text"/>
-<button class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 shrink-0" type="submit">
-<i class="fa-solid fa-plus"></i> Aggiungi
-              </button>
-</form>
-<ul class="space-y-2 max-h-64 overflow-y-auto pr-1" id="admin-types-list">
-<!-- Elementi tipologie con tasto rimuovi -->
-</ul>
-</div>
-<!-- 2. Gestione Fasce Orarie -->
-<div class="bg-slate-800 rounded-2xl p-6 border border-slate-700 shadow-xl">
-<h3 class="text-base font-bold text-white mb-4 flex items-center gap-2">
-<i class="fa-solid fa-clock text-amber-400"></i> Gestione Fasce Orarie
-            </h3>
-<form class="flex gap-2 mb-5" onsubmit="handleAddTimeSlot(event)">
-<input class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500" id="new-slot-name" placeholder="Es. 20:00 - 21:30" required="" type="text"/>
-<button class="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 shrink-0" type="submit">
-<i class="fa-solid fa-plus"></i> Aggiungi
-              </button>
-</form>
-<ul class="space-y-2 max-h-64 overflow-y-auto pr-1" id="admin-slots-list">
-<!-- Elementi fasce orarie con tasto modifica ed elimina -->
-</ul>
-</div>
-<!-- 3. Gestione Nominativi Dipendenti -->
-<div class="bg-slate-800 rounded-2xl p-6 border border-slate-700 shadow-xl">
-<h3 class="text-base font-bold text-white mb-4 flex items-center gap-2">
-<i class="fa-solid fa-users text-emerald-400"></i> Gestione Nominativi Abilitati
-            </h3>
-<form class="flex gap-2 mb-5" onsubmit="handleAddEmployee(event)">
-<input class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500" id="new-emp-name" placeholder="Nome e Cognome..." required="" type="text"/>
-<button class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 shrink-0" type="submit">
-<i class="fa-solid fa-user-plus"></i> Aggiungi
-              </button>
-</form>
-<ul class="space-y-2 max-h-64 overflow-y-auto pr-1" id="admin-users-list">
-<!-- Elementi dipendenti con tasto rimuovi -->
-</ul>
-</div>
-</div>
-<!-- Backup e Reset -->
-<div class="bg-slate-800 rounded-2xl p-6 border border-slate-700 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
-<div>
-<h4 class="font-bold text-white text-sm">Reset Dati di Esempio</h4>
-<p class="text-xs text-slate-400">Ripristina le prenotazioni, fasce orarie e gli utenti iniziali predefiniti.</p>
-</div>
-<button class="bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-semibold px-4 py-2.5 rounded-xl transition" onclick="resetToDefaults()">
-            Ripristina Dati Iniziali
-          </button>
-</div>
-</div>
-</section>
-</main>
-<!-- MODALE SBLOCCO ADMIN -->
-<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4" id="modal-admin-auth">
-<div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
-<div class="text-center mb-5">
-<div class="w-14 h-14 bg-amber-500/10 text-amber-400 rounded-2xl border border-amber-500/20 mx-auto flex items-center justify-center text-2xl mb-3 shadow-inner">
-<i class="fa-solid fa-shield-halved"></i>
-</div>
-<h3 class="text-lg font-bold text-white">Accesso Area Riservata</h3>
-<p class="text-xs text-slate-400 mt-1">Inserisci la chiave di sicurezza per configurare il sistema.</p>
-</div>
-<form class="space-y-4" onsubmit="submitAdminPassword(event)">
-<div>
-<label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Password di Sblocco</label>
-<input class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white text-center font-mono tracking-widest focus:outline-none focus:border-amber-500 transition" id="admin-pass-input" placeholder="••••••••" required="" type="password"/>
-<p class="text-xs text-red-400 mt-1.5 text-center hidden" id="admin-pass-err">
-<i class="fa-solid fa-circle-exclamation"></i> Password non corretta. Riprova.
-          </p>
-</div>
-<div class="flex gap-2">
-<button class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-semibold py-2.5 rounded-xl text-sm transition" onclick="closeAdminModal()" type="button">
-            Annulla
-          </button>
-<button class="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2.5 rounded-xl text-sm transition shadow-lg shadow-amber-500/20" type="submit">
-            Sblocca
-          </button>
-</div>
-</form>
-</div>
-</div>
-<!-- SCRIPT OPERATIVO APPLICATIVO & LOGICA PWA -->
-<script>
-    // Inizializzazione Dati Predefiniti
-    const DEFAULT_DATA = {
-      types: ["Navetta Sede Centrale", "Linee Periferiche", "Trasporto Flessibile On-Demand"],
-      slots: ["07:00 - 08:30", "08:30 - 10:00", "12:30 - 14:00", "16:30 - 18:00", "18:00 - 19:30"],
-      users: ["Mario Rossi", "Laura Bianchi", "Giuseppe Verdi", "Anna Neri", "Marco Colombo", "Elena Ferrari"],
-      bookings: [
-        { id: 1, date: "2025-05-12", user: "Mario Rossi", type: "Navetta Sede Centrale", slot: "08:30 - 10:00", option: "Andata e Ritorno", notes: "Sede A" },
-        { id: 2, date: "2025-05-12", user: "Laura Bianchi", type: "Navetta Sede Centrale", slot: "08:30 - 10:00", option: "Andata e Ritorno", notes: "Cancello Principale" },
-        { id: 3, date: "2025-05-12", user: "Giuseppe Verdi", type: "Linee Periferiche", slot: "07:00 - 08:30", option: "Andata Sola", notes: "Fermata Metro" },
-        { id: 4, date: "2025-05-13", user: "Anna Neri", type: "Trasporto Flessibile On-Demand", slot: "12:30 - 14:00", option: "Andata Sola", notes: "Piazza Garibaldi" },
-        { id: 5, date: "2025-05-13", user: "Marco Colombo", type: "Navetta Sede Centrale", slot: "08:30 - 10:00", option: "Andata e Ritorno", notes: "Ufficio Tecnico" }
-      ]
-    };
-
-    let appState = {
-      isAdminUnlocked: false,
-      types: JSON.parse(localStorage.getItem('tp_types')) || DEFAULT_DATA.types,
-      slots: JSON.parse(localStorage.getItem('tp_slots')) || DEFAULT_DATA.slots,
-      users: JSON.parse(localStorage.getItem('tp_users')) || DEFAULT_DATA.users,
-      bookings: JSON.parse(localStorage.getItem('tp_bookings')) || DEFAULT_DATA.bookings,
-      selectedType: ""
-    };
-
-    function persistState() {
-      localStorage.setItem('tp_types', JSON.stringify(appState.types));
-      localStorage.setItem('tp_slots', JSON.stringify(appState.slots));
-      localStorage.setItem('tp_users', JSON.stringify(appState.users));
-      localStorage.setItem('tp_bookings', JSON.stringify(appState.bookings));
-    }
-
-    // Palette cromatica per combinazioni identiche (Orario + Corsa + Opzione)
-    const COMBO_PALETTE = [
-      { bg: 'bg-blue-500/15 text-blue-300 border-blue-500/40', badge: 'bg-blue-500 text-white' },
-      { bg: 'bg-amber-500/15 text-amber-300 border-amber-500/40', badge: 'bg-amber-500 text-slate-900' },
-      { bg: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40', badge: 'bg-emerald-500 text-slate-900' },
-      { bg: 'bg-purple-500/15 text-purple-300 border-purple-500/40', badge: 'bg-purple-500 text-white' },
-      { bg: 'bg-pink-500/15 text-pink-300 border-pink-500/40', badge: 'bg-pink-500 text-white' },
-      { bg: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/40', badge: 'bg-cyan-500 text-slate-900' }
-    ];
-
-    function getComboKey(b) {
-      return `${b.type} | ${b.slot} | ${b.option}`;
-    }
-
-    function getComboMap(bookingsList) {
-      const counts = {};
-      bookingsList.forEach(b => {
-        const k = getComboKey(b);
-        counts[k] = (counts[k] || 0) + 1;
-      });
-      return counts;
-    }
-
-    function getStyleForCombo(comboKey, allCombosKeys) {
-      const index = allCombosKeys.indexOf(comboKey);
-      if (index === -1) return COMBO_PALETTE[0];
-      return COMBO_PALETTE[index % COMBO_PALETTE.length];
-    }
-
-    // Switch Tab
-    function switchTab(tabId) {
-      if (tabId === 'tab-admin' && !appState.isAdminUnlocked) {
-        requestAdminAccess();
-        return;
-      }
-
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-      document.getElementById(tabId).classList.remove('hidden');
-
-      document.querySelectorAll('.nav-tab').forEach(btn => {
-        btn.classList.remove('bg-blue-600', 'text-white', 'shadow');
-        btn.classList.add('text-slate-300');
-      });
-
-      if (tabId === 'tab-prenotazione') document.getElementById('btn-prenotazione').classList.add('bg-blue-600', 'text-white', 'shadow');
-      if (tabId === 'tab-tabella') {
-        document.getElementById('btn-tabella').classList.add('bg-blue-600', 'text-white', 'shadow');
-        renderTable();
-      }
-      if (tabId === 'tab-admin') {
-        document.getElementById('btn-admin').classList.add('bg-blue-600', 'text-white', 'shadow');
-        renderAdminLists();
-      }
-    }
-
-    // Modal Admin
-    function requestAdminAccess() {
-      if (appState.isAdminUnlocked) {
-        switchTab('tab-admin');
-      } else {
-        document.getElementById('admin-pass-input').value = '';
-        document.getElementById('admin-pass-err').classList.add('hidden');
-        document.getElementById('modal-admin-auth').classList.remove('hidden');
-        setTimeout(() => document.getElementById('admin-pass-input').focus(), 100);
-      }
-    }
-
-    function closeAdminModal() {
-      document.getElementById('modal-admin-auth').classList.add('hidden');
-    }
-
-    function submitAdminPassword(e) {
-      e.preventDefault();
-      const pwd = document.getElementById('admin-pass-input').value.trim();
-      if (pwd === 'strongroom') {
-        appState.isAdminUnlocked = true;
-        closeAdminModal();
-        switchTab('tab-admin');
-      } else {
-        document.getElementById('admin-pass-err').classList.remove('hidden');
-      }
-    }
-
-    function lockAdmin() {
-      appState.isAdminUnlocked = false;
-      switchTab('tab-prenotazione');
-    }
-
-    // Render Form Elements
-    function renderBookingFormElements() {
-      // Dropdown Utenti
-      const selectUser = document.getElementById('book-user');
-      const currentUserVal = selectUser.value;
-      selectUser.innerHTML = '<option value="" disabled selected>Seleziona il tuo nome...</option>' + 
-        appState.users.map(u => `<option value="${u}">${u}</option>`).join('');
-      if (currentUserVal && appState.users.includes(currentUserVal)) {
-        selectUser.value = currentUserVal;
-      }
-
-      // Dropdown Fasce Orarie (Dinamico da appState.slots)
-      const selectSlot = document.getElementById('book-slot');
-      const currentSlotVal = selectSlot.value;
-      selectSlot.innerHTML = '<option value="" disabled selected>Seleziona fascia oraria...</option>' + 
-        appState.slots.map(s => `<option value="${s}">${s}</option>`).join('');
-      if (currentSlotVal && appState.slots.includes(currentSlotVal)) {
-        selectSlot.value = currentSlotVal;
-      }
-
-      // Schede Tipologie
-      if (!appState.selectedType && appState.types.length > 0) {
-        appState.selectedType = appState.types[0];
-      }
-      const typesContainer = document.getElementById('booking-types-container');
-      typesContainer.innerHTML = appState.types.map(t => {
-        const isSelected = t === appState.selectedType;
-        return `
-          <div onclick="selectTransportType('${t.replace(/'/g, "\\'")}')" 
-               class="cursor-pointer p-3.5 rounded-xl border transition text-sm flex items-center gap-3 ${isSelected ? 'bg-blue-600/20 border-blue-500 text-white ring-2 ring-blue-500/30' : 'bg-slate-900 border-slate-700 text-slate-300 hover:border-slate-600'}">
-            <i class="fa-solid fa-van-shuttle ${isSelected ? 'text-blue-400' : 'text-slate-500'}"></i>
-            <span class="font-medium text-xs sm:text-sm">${t}</span>
+            <p class="text-sm text-slate-400 mt-1">Le combinazioni uguali (stessa fascia, tipologia e opzione) hanno il medesimo colore ed evidenziano il contatore.</p>
           </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-400 mr-2 uppercase">Filtra per Data:</label>
+            <input type="date" id="filter-date" onchange="renderTable()" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5 text-sm text-slate-200">
+          </div>
+        </div>
+
+        <div>
+          <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Riepilogo Conteggio Combinazioni:</h4>
+          <div id="combination-counters" class="flex flex-wrap gap-2.5"></div>
+        </div>
+
+        <div class="overflow-x-auto rounded-xl border border-slate-800">
+          <table class="w-full text-left border-collapse text-sm">
+            <thead>
+              <tr class="bg-slate-950/80 text-slate-400 text-xs uppercase tracking-wider border-b border-slate-800">
+                <th class="p-3.5">Nominativo</th>
+                <th class="p-3.5">Data</th>
+                <th class="p-3.5">Tipologia Trasporto</th>
+                <th class="p-3.5">Fascia Oraria</th>
+                <th class="p-3.5">Opzione</th>
+                <th class="p-3.5">Gruppo / Contatore</th>
+                <th class="p-3.5 text-right">Azioni</th>
+              </tr>
+            </thead>
+            <tbody id="bookings-table-body" class="divide-y divide-slate-800/60 bg-slate-900/40"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- SEZIONE 1: AMMINISTRAZIONE -->
+    <section id="section-admin" class="space-y-6 hidden">
+      <div id="admin-lock-screen" class="bg-slate-900 border border-slate-800 rounded-2xl p-8 max-w-md mx-auto text-center shadow-2xl my-8">
+        <div class="w-16 h-16 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <h2 class="text-xl font-bold text-white mb-2">Area Amministratore</h2>
+        <p class="text-xs text-slate-400 mb-6">Inserisci la password amministrativa per sbloccare la gestione di orari, tipologie e nominativi.</p>
+        
+        <form onsubmit="unlockAdmin(event)" class="space-y-4">
+          <input type="password" id="admin-password-input" placeholder="Password admin..." required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-center text-slate-200 focus:outline-none focus:border-blue-500">
+          <button type="submit" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition shadow-lg shadow-blue-600/30">
+            Sblocca Pannello
+          </button>
+          <p id="admin-error" class="text-xs text-rose-400 hidden">Password errata. Riprova.</p>
+        </form>
+      </div>
+
+      <div id="admin-content" class="hidden space-y-6">
+        <div class="flex items-center justify-between bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+          <div class="flex items-center gap-2 text-emerald-400 text-sm font-semibold">
+            <i class="fa-solid fa-lock-open"></i> Pannello Sbloccato (Admin Autenticato)
+          </div>
+          <button onclick="lockAdmin()" class="text-xs text-slate-400 hover:text-white px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 transition">
+            Blocca Pannello
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl flex flex-col">
+            <h3 class="font-bold text-white mb-2 flex items-center gap-2">
+              <i class="fa-solid fa-van-shuttle text-blue-400"></i> Tipologie Corsa
+            </h3>
+            <p class="text-xs text-slate-400 mb-4">Crea o elimina le tipologie disponibili per gli utenti.</p>
+            <div class="flex gap-2 mb-4">
+              <input type="text" id="new-type-input" placeholder="Nuova tipologia..." class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200">
+              <button onclick="addType()" class="px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition">Aggiungi</button>
+            </div>
+            <ul id="admin-types-list" class="space-y-2 flex-1 overflow-y-auto max-h-60 text-xs"></ul>
+          </div>
+
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl flex flex-col">
+            <h3 class="font-bold text-white mb-2 flex items-center gap-2">
+              <i class="fa-regular fa-clock text-amber-400"></i> Fasce Orarie
+            </h3>
+            <p class="text-xs text-slate-400 mb-4">Aggiungi o rimuovi le fasce orarie prestabilite.</p>
+            <div class="flex gap-2 mb-4">
+              <input type="text" id="new-time-input" placeholder="Es. 08:30 - 10:00" class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200">
+              <button onclick="addTimeSlot()" class="px-3 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold transition">Aggiungi</button>
+            </div>
+            <ul id="admin-times-list" class="space-y-2 flex-1 overflow-y-auto max-h-60 text-xs"></ul>
+          </div>
+
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl flex flex-col">
+            <h3 class="font-bold text-white mb-2 flex items-center gap-2">
+              <i class="fa-solid fa-users text-purple-400"></i> Dipendenti
+            </h3>
+            <p class="text-xs text-slate-400 mb-4">Aggiungi o rimuovi nominativi dall'elenco attivo.</p>
+            <div class="flex gap-2 mb-4">
+              <input type="text" id="new-user-input" placeholder="Nome e Cognome..." class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200">
+              <button onclick="addUser()" class="px-3 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold transition">Aggiungi</button>
+            </div>
+            <ul id="admin-users-list" class="space-y-2 flex-1 overflow-y-auto max-h-60 text-xs"></ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FIREBASE & LOGICA APPLICATIVA -->
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAeUab27IUaJiCkBx2MRARKOl4cPnSm_Eo",
+      authDomain: "transposync-cb84b.firebaseapp.com",
+      projectId: "transposync-cb84b",
+      storageBucket: "transposync-cb84b.firebasestorage.app",
+      messagingSenderId: "1058524333253",
+      appId: "1:1058524333253:web:65d280d5affd774ba6dcac"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    let configData = {
+      types: ["Navetta Sede Centrale", "Linee Periferiche", "Trasporto Flessibile On-Demand"],
+      timeSlots: ["07:00 - 08:30", "08:30 - 10:00", "12:30 - 14:00", "16:30 - 18:00"],
+      users: ["Mario Rossi", "Laura Bianchi", "Giuseppe Verdi", "Anna Neri", "Marco Colombo"]
+    };
+    let bookings = [];
+    let selectedType = "";
+    let isAdminUnlocked = false;
+
+    function initRealtimeListeners() {
+      db.collection("settings").doc("appConfig").onSnapshot((doc) => {
+        if (doc.exists) {
+          configData = doc.data();
+        } else {
+          db.collection("settings").doc("appConfig").set(configData);
+        }
+        renderConfigUI();
+      }, (error) => {
+        console.warn("Firestore settings error:", error);
+        document.getElementById("cloud-status").innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400"></span><span>Offline / Cache</span>`;
+        renderConfigUI();
+      });
+
+      db.collection("bookings").orderBy("createdAt", "desc").onSnapshot((snapshot) => {
+        bookings = [];
+        snapshot.forEach((doc) => {
+          bookings.push({ id: doc.id, ...doc.data() });
+        });
+        renderRecentBookings();
+        renderTable();
+      }, (error) => {
+        console.warn("Firestore bookings error:", error);
+      });
+    }
+
+    function renderConfigUI() {
+      const userSelect = document.getElementById("user-select");
+      userSelect.innerHTML = '<option value="">Seleziona nominativo...</option>' + 
+        configData.users.map(u => `<option value="${u}">${u}</option>`).join('');
+
+      const typesContainer = document.getElementById("transport-types-container");
+      if (!selectedType && configData.types.length > 0) {
+        selectedType = configData.types[0];
+      }
+      typesContainer.innerHTML = configData.types.map(t => {
+        const isSel = (t === selectedType);
+        return `
+          <button type="button" onclick="selectType('${t.replace(/'/g, "\\'")}')" class="p-3 rounded-xl border text-left text-xs font-semibold flex items-center gap-2.5 transition ${isSel ? 'bg-blue-600/20 border-blue-500 text-white' : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'}">
+            <i class="fa-solid fa-van-shuttle ${isSel ? 'text-blue-400' : 'text-slate-500'}"></i>
+            <span class="truncate">${t}</span>
+          </button>
         `;
       }).join('');
 
-      // Set default date to today se non presente
-      if (!document.getElementById('book-date').value) {
-        document.getElementById('book-date').value = new Date().toISOString().split('T')[0];
-      }
+      const timeSelect = document.getElementById("time-select");
+      timeSelect.innerHTML = '<option value="">Seleziona fascia oraria...</option>' + 
+        configData.timeSlots.map(s => `<option value="${s}">${s}</option>`).join('');
 
-      renderRecentBookings();
+      renderAdminLists();
     }
 
-    function selectTransportType(t) {
-      appState.selectedType = t;
-      renderBookingFormElements();
+    function selectType(t) {
+      selectedType = t;
+      renderConfigUI();
     }
 
-    function renderRecentBookings() {
-      const list = document.getElementById('booking-recent-list');
-      const recent = [...appState.bookings].reverse().slice(0, 4);
-      if (recent.length === 0) {
-        list.innerHTML = '<p class="text-slate-500">Nessuna prenotazione presente.</p>';
-        return;
-      }
-      list.innerHTML = recent.map(b => `
-        <div class="p-2.5 rounded-lg bg-slate-900/60 border border-slate-700 flex justify-between items-center">
-          <div>
-            <div class="font-semibold text-slate-200">${b.user}</div>
-            <div class="text-[11px] text-slate-400">${b.date} • ${b.type}</div>
-          </div>
-          <span class="px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-300 border border-slate-600 font-mono">${b.slot}</span>
-        </div>
-      `).join('');
-    }
+    async function handleBooking(event) {
+      event.preventDefault();
+      const user = document.getElementById("user-select").value;
+      const date = document.getElementById("date-select").value;
+      const time = document.getElementById("time-select").value;
+      const option = document.getElementById("option-select").value;
+      const notes = document.getElementById("notes-input").value;
 
-    // Gestione Inserimento Prenotazione
-    function handleBooking(e) {
-      e.preventDefault();
-      const user = document.getElementById('book-user').value;
-      const date = document.getElementById('book-date').value;
-      const slot = document.getElementById('book-slot').value;
-      const option = document.getElementById('book-option').value;
-      const notes = document.getElementById('book-notes').value.trim();
-
-      if (!appState.selectedType) {
-        alert("Seleziona una tipologia di trasporto.");
+      if (!user || !date || !selectedType || !time || !option) {
+        alert("Compila tutti i campi obbligatori!");
         return;
       }
 
       const newBooking = {
-        id: Date.now(),
-        date,
         user,
-        type: appState.selectedType,
-        slot,
+        date,
+        type: selectedType,
+        time,
         option,
-        notes: notes || "Standard"
+        notes: notes || "",
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
       };
 
-      appState.bookings.push(newBooking);
-      persistState();
-      renderBookingFormElements();
-      
-      // Feedback all'utente e passaggio alla tabella
-      alert(`Prenotazione registrata con successo per ${user}!`);
-      switchTab('tab-tabella');
+      try {
+        await db.collection("bookings").add(newBooking);
+        document.getElementById("notes-input").value = "";
+        alert("Prenotazione salvata e sincronizzata su tutti i dispositivi!");
+      } catch (err) {
+        console.error("Errore salvataggio:", err);
+        alert("Errore durante il salvataggio.");
+      }
     }
 
-    // Render Tabella & Contatori Colorati
-    function renderTable() {
-      const filterDate = document.getElementById('filter-date').value;
-      let filtered = appState.bookings;
-      if (filterDate) {
-        filtered = filtered.filter(b => b.date === filterDate);
+    function renderRecentBookings() {
+      const container = document.getElementById("recent-bookings");
+      if (bookings.length === 0) {
+        container.innerHTML = `<div class="text-center py-6 text-slate-500 text-xs">Nessuna prenotazione presente</div>`;
+        return;
       }
+      container.innerHTML = bookings.slice(0, 4).map(b => `
+        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
+          <div>
+            <div class="font-bold text-slate-200">${b.user}</div>
+            <div class="text-slate-400 text-[11px]">${b.date} • ${b.type}</div>
+          </div>
+          <span class="px-2 py-1 bg-slate-800 text-blue-400 font-mono text-[10px] rounded border border-slate-700">${b.time}</span>
+        </div>
+      `).join('');
+    }
 
-      const comboCounts = getComboMap(filtered);
-      const uniqueCombos = Object.keys(comboCounts);
+    const comboColors = [
+      "bg-blue-600/30 text-blue-300 border-blue-500/40",
+      "bg-emerald-600/30 text-emerald-300 border-emerald-500/40",
+      "bg-amber-600/30 text-amber-300 border-amber-500/40",
+      "bg-purple-600/30 text-purple-300 border-purple-500/40",
+      "bg-pink-600/30 text-pink-300 border-pink-500/40",
+      "bg-cyan-600/30 text-cyan-300 border-cyan-500/40"
+    ];
 
-      // Render Badge Contatori
-      const countersContainer = document.getElementById('combination-counters');
-      if (uniqueCombos.length === 0) {
-        countersContainer.innerHTML = '<span class="text-xs text-slate-500">Nessuna combinazione attiva per la selezione.</span>';
+    function renderTable() {
+      const filterDate = document.getElementById("filter-date").value;
+      const filtered = filterDate ? bookings.filter(b => b.date === filterDate) : bookings;
+
+      const comboCounts = {};
+      const comboKeys = [];
+
+      filtered.forEach(b => {
+        const key = `${b.type} | ${b.time} | ${b.option}`;
+        if (!comboCounts[key]) {
+          comboCounts[key] = 0;
+          comboKeys.push(key);
+        }
+        comboCounts[key]++;
+      });
+
+      const counterBox = document.getElementById("combination-counters");
+      if (comboKeys.length === 0) {
+        counterBox.innerHTML = `<span class="text-xs text-slate-500">Nessuna prenotazione per la data selezionata.</span>`;
       } else {
-        countersContainer.innerHTML = uniqueCombos.map(comboKey => {
-          const count = comboCounts[comboKey];
-          const style = getStyleForCombo(comboKey, uniqueCombos);
+        counterBox.innerHTML = comboKeys.map((key, idx) => {
+          const colorClass = comboColors[idx % comboColors.length];
           return `
-            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-semibold ${style.bg}">
-              <span>${comboKey}</span>
-              <span class="px-2 py-0.5 rounded-full text-[11px] font-bold ${style.badge}">
-                ${count} ${count === 1 ? 'persona' : 'persone'}
-              </span>
+            <div class="px-3 py-1.5 rounded-xl border text-xs flex items-center gap-2 ${colorClass}">
+              <span class="font-bold">${key}</span>
+              <span class="px-1.5 py-0.5 rounded-full bg-white/10 font-bold">${comboCounts[key]}</span>
             </div>
           `;
         }).join('');
       }
 
-      // Render Righe Tabella
-      const tbody = document.getElementById('table-bookings-body');
-      const emptyMsg = document.getElementById('table-empty-msg');
-
+      const tbody = document.getElementById("bookings-table-body");
       if (filtered.length === 0) {
-        tbody.innerHTML = '';
-        emptyMsg.classList.remove('hidden');
+        tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-500 text-xs">Nessuna prenotazione trovata</td></tr>`;
         return;
       }
-      emptyMsg.classList.add('hidden');
 
       tbody.innerHTML = filtered.map(b => {
-        const comboKey = getComboKey(b);
-        const count = comboCounts[comboKey] || 1;
-        const style = getStyleForCombo(comboKey, uniqueCombos);
+        const key = `${b.type} | ${b.time} | ${b.option}`;
+        const colorIdx = comboKeys.indexOf(key);
+        const colorClass = comboColors[colorIdx % comboColors.length];
+        const count = comboCounts[key];
 
         return `
-          <tr class="hover:bg-slate-700/30 transition">
-            <td class="px-6 py-4 font-mono text-xs text-slate-300">${b.date}</td>
-            <td class="px-6 py-4 font-bold text-white">${b.user}</td>
-            <td class="px-6 py-4 text-xs text-slate-300">${b.type}</td>
-            <td class="px-6 py-4 font-mono text-xs text-blue-400 font-semibold">${b.slot}</td>
-            <td class="px-6 py-4 text-xs text-slate-300">${b.option}</td>
-            <td class="px-6 py-4">
-              <span class="inline-block px-2.5 py-1 rounded-lg text-xs font-medium border ${style.bg}">
-                ${b.type} • ${b.slot} • ${b.option}
+          <tr class="hover:bg-slate-800/30 transition">
+            <td class="p-3.5 font-bold text-slate-200">${b.user}</td>
+            <td class="p-3.5 text-slate-300 font-mono text-xs">${b.date}</td>
+            <td class="p-3.5 text-slate-300">${b.type}</td>
+            <td class="p-3.5 text-slate-300">${b.time}</td>
+            <td class="p-3.5 text-slate-300">${b.option}</td>
+            <td class="p-3.5">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${colorClass}">
+                <i class="fa-solid fa-users text-[10px]"></i> Gruppo: ${count}
               </span>
             </td>
-            <td class="px-6 py-4 text-center">
-              <span class="inline-flex items-center justify-center gap-1 px-3 py-1 rounded-full text-xs font-bold ${style.badge} shadow-sm">
-                <i class="fa-solid fa-users text-[10px]"></i> ${count}
-              </span>
-            </td>
-            <td class="px-6 py-4 text-right">
-              <button onclick="deleteBooking(${b.id})" class="text-slate-400 hover:text-red-400 transition text-xs p-1.5" title="Elimina prenotazione">
+            <td class="p-3.5 text-right">
+              <button onclick="deleteBooking('${b.id}')" class="text-xs text-slate-500 hover:text-rose-400 p-1 transition" title="Elimina prenotazione">
                 <i class="fa-solid fa-trash-can"></i>
               </button>
             </td>
@@ -640,193 +463,126 @@
       }).join('');
     }
 
-    function resetDateFilter() {
-      document.getElementById('filter-date').value = '';
-      renderTable();
-    }
-
-    function deleteBooking(id) {
-      if (confirm("Sei sicuro di voler cancellare questa prenotazione?")) {
-        appState.bookings = appState.bookings.filter(b => b.id !== id);
-        persistState();
-        renderTable();
-        renderRecentBookings();
+    async function deleteBooking(id) {
+      if (!confirm("Vuoi cancellare questa prenotazione?")) return;
+      try {
+        await db.collection("bookings").doc(id).delete();
+      } catch (err) {
+        alert("Errore durante l'eliminazione.");
       }
     }
 
-    // Sezione Amministrazione: Nuove Tipologie, Fasce Orarie e Nominativi
+    function unlockAdmin(event) {
+      event.preventDefault();
+      const pwd = document.getElementById("admin-password-input").value;
+      if (pwd === "strongroom") {
+        isAdminUnlocked = true;
+        document.getElementById("admin-lock-screen").classList.add("hidden");
+        document.getElementById("admin-content").classList.remove("hidden");
+        document.getElementById("admin-error").classList.add("hidden");
+      } else {
+        document.getElementById("admin-error").classList.remove("hidden");
+      }
+    }
+
+    function lockAdmin() {
+      isAdminUnlocked = false;
+      document.getElementById("admin-password-input").value = "";
+      document.getElementById("admin-lock-screen").classList.remove("hidden");
+      document.getElementById("admin-content").classList.add("hidden");
+    }
+
     function renderAdminLists() {
-      // Lista Tipologie
-      const tList = document.getElementById('admin-types-list');
-      tList.innerHTML = appState.types.map(t => `
-        <li class="flex items-center justify-between p-2.5 bg-slate-900 rounded-xl border border-slate-700 text-sm">
-          <span class="text-slate-200 font-medium truncate mr-2">${t}</span>
-          <button onclick="deleteTransportType('${t.replace(/'/g, "\\'")}')" class="text-slate-500 hover:text-red-400 p-1 transition shrink-0" title="Elimina tipologia">
-            <i class="fa-solid fa-trash-can text-xs"></i>
-          </button>
+      document.getElementById("admin-types-list").innerHTML = configData.types.map((t, i) => `
+        <li class="flex justify-between items-center p-2 rounded bg-slate-950 border border-slate-800">
+          <span>${t}</span>
+          <button onclick="removeType(${i})" class="text-rose-400 hover:text-rose-300"><i class="fa-solid fa-xmark"></i></button>
         </li>
       `).join('');
 
-      // Lista Fasce Orarie
-      const sList = document.getElementById('admin-slots-list');
-      sList.innerHTML = appState.slots.map(s => `
-        <li class="flex items-center justify-between p-2.5 bg-slate-900 rounded-xl border border-slate-700 text-sm">
-          <span class="text-slate-200 font-mono font-medium truncate mr-2"><i class="fa-regular fa-clock text-xs text-amber-400 mr-1.5"></i>${s}</span>
-          <div class="flex items-center gap-1 shrink-0">
-            <button onclick="editTimeSlot('${s.replace(/'/g, "\\'")}')" class="text-slate-500 hover:text-amber-400 p-1 transition" title="Modifica fascia oraria">
-              <i class="fa-solid fa-pen-to-square text-xs"></i>
-            </button>
-            <button onclick="deleteTimeSlot('${s.replace(/'/g, "\\'")}')" class="text-slate-500 hover:text-red-400 p-1 transition" title="Elimina fascia oraria">
-              <i class="fa-solid fa-trash-can text-xs"></i>
-            </button>
-          </div>
+      document.getElementById("admin-times-list").innerHTML = configData.timeSlots.map((s, i) => `
+        <li class="flex justify-between items-center p-2 rounded bg-slate-950 border border-slate-800">
+          <span>${s}</span>
+          <button onclick="removeTimeSlot(${i})" class="text-rose-400 hover:text-rose-300"><i class="fa-solid fa-xmark"></i></button>
         </li>
       `).join('');
 
-      // Lista Dipendenti
-      const uList = document.getElementById('admin-users-list');
-      uList.innerHTML = appState.users.map(u => `
-        <li class="flex items-center justify-between p-2.5 bg-slate-900 rounded-xl border border-slate-700 text-sm">
-          <span class="text-slate-200 font-medium truncate mr-2">${u}</span>
-          <button onclick="deleteEmployee('${u.replace(/'/g, "\\'")}')" class="text-slate-500 hover:text-red-400 p-1 transition shrink-0" title="Elimina nominativo">
-            <i class="fa-solid fa-user-xmark text-xs"></i>
-          </button>
+      document.getElementById("admin-users-list").innerHTML = configData.users.map((u, i) => `
+        <li class="flex justify-between items-center p-2 rounded bg-slate-950 border border-slate-800">
+          <span>${u}</span>
+          <button onclick="removeUser(${i})" class="text-rose-400 hover:text-rose-300"><i class="fa-solid fa-xmark"></i></button>
         </li>
       `).join('');
     }
 
-    // Gestione Tipologie
-    function handleAddTransportType(e) {
-      e.preventDefault();
-      const val = document.getElementById('new-type-name').value.trim();
-      if (val && !appState.types.includes(val)) {
-        appState.types.push(val);
-        persistState();
-        document.getElementById('new-type-name').value = '';
-        renderAdminLists();
-        renderBookingFormElements();
+    async function syncConfigToCloud() {
+      try {
+        await db.collection("settings").doc("appConfig").set(configData);
+      } catch (err) {
+        console.error("Errore salvataggio impostazioni:", err);
       }
     }
 
-    function deleteTransportType(t) {
-      if (appState.types.length <= 1) {
-        alert("Deve rimanere almeno una tipologia di trasporto attiva.");
-        return;
-      }
-      if (confirm(`Eliminare la tipologia "${t}"?`)) {
-        appState.types = appState.types.filter(item => item !== t);
-        if (appState.selectedType === t) appState.selectedType = appState.types[0];
-        persistState();
-        renderAdminLists();
-        renderBookingFormElements();
-      }
-    }
-
-    // Gestione Fasce Orarie
-    function handleAddTimeSlot(e) {
-      e.preventDefault();
-      const input = document.getElementById('new-slot-name');
-      const val = input.value.trim();
+    function addType() {
+      const val = document.getElementById("new-type-input").value.trim();
       if (!val) return;
-      if (appState.slots.includes(val)) {
-        alert("Questa fascia oraria esiste già.");
-        return;
-      }
-      appState.slots.push(val);
-      persistState();
-      input.value = '';
-      renderAdminLists();
-      renderBookingFormElements();
+      configData.types.push(val);
+      document.getElementById("new-type-input").value = "";
+      syncConfigToCloud();
+    }
+    function removeType(i) {
+      configData.types.splice(i, 1);
+      syncConfigToCloud();
     }
 
-    function editTimeSlot(oldSlot) {
-      const updated = prompt("Modifica fascia oraria:", oldSlot);
-      if (updated === null) return;
-      const clean = updated.trim();
-      if (!clean) {
-        alert("La fascia oraria non può essere vuota.");
-        return;
-      }
-      if (clean !== oldSlot && appState.slots.includes(clean)) {
-        alert("Questa fascia oraria è già presente.");
-        return;
-      }
-
-      // Aggiorna nell'array slots
-      const idx = appState.slots.indexOf(oldSlot);
-      if (idx !== -1) {
-        appState.slots[idx] = clean;
-        // Aggiorna a cascata le prenotazioni associate
-        appState.bookings.forEach(b => {
-          if (b.slot === oldSlot) b.slot = clean;
-        });
-        persistState();
-        renderAdminLists();
-        renderBookingFormElements();
-        renderTable();
-      }
+    function addTimeSlot() {
+      const val = document.getElementById("new-time-input").value.trim();
+      if (!val) return;
+      configData.timeSlots.push(val);
+      document.getElementById("new-time-input").value = "";
+      syncConfigToCloud();
+    }
+    function removeTimeSlot(i) {
+      configData.timeSlots.splice(i, 1);
+      syncConfigToCloud();
     }
 
-    function deleteTimeSlot(slot) {
-      if (appState.slots.length <= 1) {
-        alert("Deve rimanere almeno una fascia oraria attiva.");
-        return;
-      }
-      if (confirm(`Eliminare la fascia oraria "${slot}"?`)) {
-        appState.slots = appState.slots.filter(s => s !== slot);
-        persistState();
-        renderAdminLists();
-        renderBookingFormElements();
-        renderTable();
-      }
+    function addUser() {
+      const val = document.getElementById("new-user-input").value.trim();
+      if (!val) return;
+      configData.users.push(val);
+      document.getElementById("new-user-input").value = "";
+      syncConfigToCloud();
+    }
+    function removeUser(i) {
+      configData.users.splice(i, 1);
+      syncConfigToCloud();
     }
 
-    // Gestione Dipendenti
-    function handleAddEmployee(e) {
-      e.preventDefault();
-      const val = document.getElementById('new-emp-name').value.trim();
-      if (val && !appState.users.includes(val)) {
-        appState.users.push(val);
-        persistState();
-        document.getElementById('new-emp-name').value = '';
-        renderAdminLists();
-        renderBookingFormElements();
-      }
+    function switchTab(tabId) {
+      document.querySelectorAll("main > section").forEach(s => s.classList.add("hidden"));
+      document.getElementById("section-" + tabId).classList.remove("hidden");
+
+      document.querySelectorAll(".tab-btn").forEach(b => {
+        b.classList.remove("bg-blue-600", "text-white");
+        b.classList.add("text-slate-400");
+      });
+      const activeBtn = document.getElementById("nav-" + tabId);
+      activeBtn.classList.add("bg-blue-600", "text-white");
+      activeBtn.classList.remove("text-slate-400");
     }
 
-    function deleteEmployee(u) {
-      if (confirm(`Rimuovere "${u}" dall'elenco del personale?`)) {
-        appState.users = appState.users.filter(item => item !== u);
-        persistState();
-        renderAdminLists();
-        renderBookingFormElements();
-      }
-    }
+    window.addEventListener("DOMContentLoaded", () => {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById("date-select").value = today;
+      document.getElementById("filter-date").value = today;
 
-    function resetToDefaults() {
-      if (confirm("Vuoi davvero ripristinare i dati di default? Tutte le prenotazioni aggiuntive e le fasce personalizzate andranno perse.")) {
-        appState.types = [...DEFAULT_DATA.types];
-        appState.slots = [...DEFAULT_DATA.slots];
-        appState.users = [...DEFAULT_DATA.users];
-        appState.bookings = [...DEFAULT_DATA.bookings];
-        persistState();
-        renderAdminLists();
-        renderBookingFormElements();
-        renderTable();
-      }
-    }
+      initRealtimeListeners();
 
-    // Avvio e Registrazione Service Worker PWA
-    window.addEventListener('DOMContentLoaded', () => {
-      renderBookingFormElements();
-      renderTable();
-
-      // Registrazione SW per compatibilità GitHub Pages
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js')
-          .then(() => console.log('TranspoSync: Service Worker registrato regolarmente.'))
-          .catch(err => console.warn('TranspoSync: SW registrato in ambiente locale o limitato:', err));
+        navigator.serviceWorker.register('./sw.js').catch(err => console.warn('SW:', err));
       }
     });
   </script>
-</body></html>
+</body>
+</html>
